@@ -1,3 +1,7 @@
+# Dependencies
+- pytorch1.0.1 或者 pytorch1.1.0
+- opencv4.1.1 安卓版本
+
 # AICamera_new
 Recompile the library with caffe2 in pytorch stable(1.0) and re-implement the AICamera example provided by caffe2 officially.
 
