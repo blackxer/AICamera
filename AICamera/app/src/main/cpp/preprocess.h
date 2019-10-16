@@ -33,8 +33,8 @@ std::vector<float> readImg(std::string path){
 std::vector<float> readImg1(cv::Mat& img){
     cv::resize(img,img,cv::Size(300,300));
     cv::cvtColor(img,img,cv::COLOR_RGBA2RGB);
-    cv::subtract(img,127,img);
-    cv::divide(128,img,img);
+//    cv::subtract(img,127,img);
+//    img = img.mul(1/128);
     std::vector<float> data(1 * 3 * 300 * 300);
 
     int predHeight = img.rows;
@@ -44,9 +44,9 @@ std::vector<float> readImg1(cv::Mat& img){
     for (auto i=0; i<predHeight; i++) {
         //printf("+\n");
         for (auto j=0; j<predWidth; j++) {
-            data[i * predWidth + j + 0*size] = (float)img.data[(i*predWidth + j) * 3 + 0];
-            data[i * predWidth + j + 1*size] = (float)img.data[(i*predWidth + j) * 3 + 1];
-            data[i * predWidth + j + 2*size] = (float)img.data[(i*predWidth + j) * 3 + 2];
+            data[i * predWidth + j + 0*size] = ((float)img.data[(i*predWidth + j) * 3 + 0] - 127) / 128;
+            data[i * predWidth + j + 1*size] = ((float)img.data[(i*predWidth + j) * 3 + 1] - 127) / 128;
+            data[i * predWidth + j + 2*size] = ((float)img.data[(i*predWidth + j) * 3 + 2] -127) / 128;
         }
     }
     return data;

@@ -44,6 +44,7 @@ import android.graphics.BitmapFactory;
 import android.content.ContentResolver;
 import android.view.View.OnClickListener;
 import android.net.Uri;
+import android.media.MediaMetadataRetriever;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -55,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "AICamera";
 
     private Button selectImage;
+    private Button selectVideo;
     private Button predict;
     private ImageView imageView;
     private ImageView result;
@@ -67,11 +69,7 @@ public class MainActivity extends AppCompatActivity {
         System.loadLibrary("native-lib");
     }
 
-
-//    public native String predFromCaffe2(byte[] Y, byte[] U, byte[] V, int width, int height, int y_row_stride,
-//                                        int uv_row_stride, int uv_pixel_stride, int scale_width, int scale_height, int degree);
-
-    public native void predFromCaffe2(Object bitmap);
+    public native String predFromCaffe2(Object bitmap);
 
     public native void initCaffe2(AssetManager mgr);
 
@@ -110,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         selectImage = (Button) this.findViewById(R.id.selectImage);
+        selectVideo = (Button) this.findViewById(R.id.selectVideo);
         predict = (Button) this.findViewById(R.id.predict);
         imageView = (ImageView) this.findViewById(R.id.imageView);
         result = (ImageView) this.findViewById(R.id.result);
@@ -131,12 +130,49 @@ public class MainActivity extends AppCompatActivity {
         predict.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                predFromCaffe2((Object)srcBitmap);
-                result.setImageBitmap(srcBitmap);
+                predictedClass = predFromCaffe2((Object)srcBitmap);
+                tv.setText(predictedClass);
+                imageView.setImageBitmap(srcBitmap);
                 Toast.makeText(MainActivity.this, "predict done", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        selectVideo.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new AsyncTask<Void, Bitmap, Void>(){
+                    @Override
+                    protected Void doInBackground(Void... voids) {
+                        MediaMetadataRetriever mmr = new MediaMetadataRetriever();//实例化MediaMetadataRetriever对象
+                        File file = new File("/sdcard/demo/1.mp4");//实例化File对象，文件路径为/storage/sdcard/Movies/music1.mp4
+                        if(file.exists()){
+                            mmr.setDataSource(file.getAbsolutePath());//设置数据源为该文件对象指定的绝对路径
+                            // 取得视频的长度(单位为毫秒)
+                            String time = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                            // 取得视频的长度(单位为毫秒)
+                            long melliseconds = Long.valueOf(time);
+
+                            for (long i = 0; i < melliseconds; ) {
+                                Bitmap bitmap = mmr.getFrameAtTime(i*1000, MediaMetadataRetriever.OPTION_CLOSEST);
+                                publishProgress(bitmap);
+                                i+=30;
+                            }
+                        }else{
+                            Toast.makeText(MainActivity.this, "文件不存在", Toast.LENGTH_SHORT).show();//文件不存在时，弹出消息提示框
+                        }
+                        return null;
+                    }
+                    protected void onProgressUpdate(Bitmap... bitmap){
+                        predictedClass = predFromCaffe2((Object) bitmap[0]);
+                        result.setImageBitmap(bitmap[0]);//设置ImageView显示的图片
+                        tv.setText(predictedClass);
+                    }
+
+                }.execute();
 
             }
         });
+
     }
 
     /**
@@ -150,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
             try{
                 srcBitmap = BitmapFactory.decodeStream(cr.openInputStream(uri));
                 //将Bitmap设置到imageView
-                imageView.setImageBitmap(Bitmap.createBitmap(srcBitmap));
+                imageView.setImageBitmap(srcBitmap);
             }catch(FileNotFoundException e)
             {
                 e.printStackTrace();

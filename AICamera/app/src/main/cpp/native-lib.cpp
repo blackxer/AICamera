@@ -77,8 +77,8 @@ Java_com_ufo_aicamera_MainActivity_initCaffe2(JNIEnv *env, jobject /* this */, j
 
     AAssetManager *mgr = AAssetManager_fromJava(env, assetManager);
     alog("Attempting to load protobuf netdefs...");
-    loadToNetDef(mgr, &_initNet,   "vgg16-ssd_init_net.pb");
-    loadToNetDef(mgr, &_predictNet,"vgg16-ssd_predict_net.pb");
+    loadToNetDef(mgr, &_initNet,   "mb2-ssd-lite_init_net.pb");
+    loadToNetDef(mgr, &_predictNet,"mb2-ssd-lite_predict_net.pb");
     alog("done.");
     alog("Instantiating predictor...");
     _predictor = new caffe2::Predictor(_initNet, _predictNet);
@@ -89,109 +89,6 @@ Java_com_ufo_aicamera_MainActivity_initCaffe2(JNIEnv *env, jobject /* this */, j
 float avg_fps = 0.0;
 float total_fps = 0.0;
 int iters_fps = 10;
-
-//extern "C"
-//JNIEXPORT jstring JNICALL
-//Java_com_ufo_aicamera_MainActivity_predFromCaffe2(
-//        JNIEnv *env,
-//        jobject /* this */,
-//        jbyteArray y, jbyteArray u, jbyteArray v,
-//        jint width, jint height, jint y_row_stride,
-//        jint uv_row_stride, jint uv_pixel_stride,
-//        jint scale_width, jint scale_height, jint degree) {
-//
-//    if (!_predictor) {
-//        return env->NewStringUTF("Loading...");
-//    }
-//
-//    caffe2::TensorCPU input = caffe2::Tensor(1,caffe2::DeviceType::CPU);
-//
-//    input.Resize(std::vector<int>({1, IMG_C, IMG_H, IMG_W}));
-//
-//    alog("Reading data...");
-//    std::vector<float> data = readImg("/sdcard/demo/image_00082.jpg");
-//    alog("data size %d", data.size());
-//    memcpy(input.mutable_data<float>(), data.data(), IMG_H * IMG_W * IMG_C * sizeof(float));
-//    alog("done...");
-//    caffe2::Predictor::TensorList input_vec{input};
-//    caffe2::Predictor::TensorList output_vec;
-//    caffe2::Timer t;
-//    t.Start();
-//    alog("Predicting...");
-//    _predictor->operator()(input_vec, &output_vec);
-//    float fps = 1000/t.MilliSeconds();
-//    total_fps += fps;
-//    avg_fps = total_fps / iters_fps;
-//    total_fps -= avg_fps;
-//    alog("done...");
-//
-//    caffe2::Timer t_p;
-//    t_p.Start();
-//    caffe2::TensorCPU scores = output_vec[0]; // 1*8732*3 ：  索引0为背景， 类别数为2
-//    caffe2::TensorCPU boxes = output_vec[1];  // 1*8732*4 ：  x1,y1,x2,y2, 左上角和右下角
-//    std::vector<float> score_1;  // 保存类别1的scores
-//    std::vector<float> score_2;  // 保存类别2的scores
-//    std::vector<Bbox> bbox_1;    // 保存类别1的bbox和score
-//    std::vector<Bbox> bbox_2;    // 保存类别2的bbox和score
-//    for(int i=0; i<scores.size(1); i++){
-//        Bbox temp;
-//        temp.x1 = boxes.template data<float>()[i*4];
-//        temp.y1 = boxes.template data<float>()[i*4+1];
-//        temp.x2 = boxes.template data<float>()[i*4+2];
-//        temp.y2 = boxes.template data<float>()[i*4+3];
-//        temp.score = scores.template data<float>()[i*3+1];
-//        temp.area = (temp.x2 - temp.x1) * (temp.y2 - temp.y1);
-//        bbox_1.push_back(temp);
-//        temp.score = scores.template data<float>()[i*3+2];
-//        bbox_2.push_back(temp);
-//    }
-//    alog("Start nms...");
-//    alog("bbox_1 size: %d", bbox_1.size());
-//    nms(bbox_1, 0.5, 0.5);
-//    nms(bbox_2, 0.5, 0.5);
-//    alog("done...");
-//    float elapse = t_p.MilliSeconds()/1000;
-//    alog("elapse: %f", elapse);
-//
-//    alog("Post processing");
-//    cv::Mat ori_img = cv::imread("/sdcard/demo/image_00082.jpg");
-//    int ori_width = ori_img.cols;
-//    int ori_height = ori_img.rows;
-//    for(int i=0; i<bbox_1.size(); i++){
-//        int x1 = bbox_1[i].x1 * ori_width;
-//        int y1 = bbox_1[i].y1 * ori_height;
-//        int x2 = bbox_1[i].x2 * ori_width;
-//        int y2 = bbox_1[i].y2 * ori_height;
-//        float score = bbox_1[i].score;
-//
-//        cv::Point p1(x1, y1);
-//        cv::Point p2(x2, y2);
-//        cv::Scalar color(255,0,0);
-//        cv::rectangle(ori_img,p1,p2,color,5);
-//    }
-//    for(int i=0; i<bbox_2.size(); i++){
-//        int x1 = bbox_2[i].x1 * ori_width;
-//        int y1 = bbox_2[i].y1 * ori_height;
-//        int x2 = bbox_2[i].x2 * ori_width;
-//        int y2 = bbox_2[i].y2 * ori_height;
-//        float score = bbox_2[i].score;
-//
-//        cv::Point p1(x1, y1);
-//        cv::Point p2(x2, y2);
-//        cv::Scalar color(0,255,0);
-//        cv::rectangle(ori_img,p1,p2,color,5);
-//    }
-//    cv::imwrite("/sdcard/demo/2.jpg", ori_img);
-//    alog("done");
-//    std::ostringstream stringStream;
-//    stringStream << avg_fps << " FPS\n";
-//
-//
-//    return env->NewStringUTF(stringStream.str().c_str());
-//}
-
-
-
 
 
 void BitmapToMat2(JNIEnv *env, jobject& bitmap, cv::Mat& mat, jboolean needUnPremultiplyAlpha) {
@@ -337,74 +234,64 @@ Java_com_ufo_aicamera_MainActivity_predFromCaffe2(
     t.Start();
     alog("Predicting...");
     _predictor->operator()(input_vec, &output_vec);
-    float fps = 1000/t.MilliSeconds();
-    total_fps += fps;
-    avg_fps = total_fps / iters_fps;
-    total_fps -= avg_fps;
+    float fps = t.MilliSeconds();
     alog("done...");
 
     caffe2::Timer t_p;
     t_p.Start();
     caffe2::TensorCPU scores = output_vec[0]; // 1*8732*3 ：  索引0为背景， 类别数为2
     caffe2::TensorCPU boxes = output_vec[1];  // 1*8732*4 ：  x1,y1,x2,y2, 左上角和右下角
-    std::vector<float> score_1;  // 保存类别1的scores
-    std::vector<float> score_2;  // 保存类别2的scores
-    std::vector<Bbox> bbox_1;    // 保存类别1的bbox和score
-    std::vector<Bbox> bbox_2;    // 保存类别2的bbox和score
-    for(int i=0; i<scores.size(1); i++){
-        Bbox temp;
-        temp.x1 = boxes.template data<float>()[i*4];
-        temp.y1 = boxes.template data<float>()[i*4+1];
-        temp.x2 = boxes.template data<float>()[i*4+2];
-        temp.y2 = boxes.template data<float>()[i*4+3];
-        temp.score = scores.template data<float>()[i*3+1];
-        temp.area = (temp.x2 - temp.x1) * (temp.y2 - temp.y1);
-        bbox_1.push_back(temp);
-        temp.score = scores.template data<float>()[i*3+2];
-        bbox_2.push_back(temp);
+
+    std::vector<std::vector<Bbox>> result;    // 保存类别2的bbox和score
+    for(int c=1; c<scores.size(2); c++){
+        std::vector<Bbox> bbox;    // 保存类别1的bbox和score
+        for (int i = 0; i < scores.size(1); i++) {
+            Bbox temp;
+            temp.x1 = boxes.template data<float>()[i * 4];
+            temp.y1 = boxes.template data<float>()[i * 4 + 1];
+            temp.x2 = boxes.template data<float>()[i * 4 + 2];
+            temp.y2 = boxes.template data<float>()[i * 4 + 3];
+            temp.score = scores.template data<float>()[i * scores.size(2) + c];
+            if(temp.score <= 0.5){ continue; }
+            temp.area = (temp.x2 - temp.x1) * (temp.y2 - temp.y1);
+            bbox.push_back(temp);
+        }
+        alog("Start nms...");
+        alog("%d class, bbox size: %d", c,bbox.size());
+        nms(bbox, 0.5, 0.5);
+        result.push_back(bbox);
+        alog("done...");
     }
-    alog("Start nms...");
-    alog("bbox_1 size: %d", bbox_1.size());
-    nms(bbox_1, 0.5, 0.5);
-    nms(bbox_2, 0.5, 0.5);
-    alog("done...");
-    float elapse = t_p.MilliSeconds()/1000;
+    float elapse = t_p.MilliSeconds();
     alog("elapse: %f", elapse);
 
     alog("Post processing");
     int ori_width = mat_image_src.cols;
     int ori_height = mat_image_src.rows;
-    for(int i=0; i<bbox_1.size(); i++){
-        int x1 = bbox_1[i].x1 * ori_width;
-        int y1 = bbox_1[i].y1 * ori_height;
-        int x2 = bbox_1[i].x2 * ori_width;
-        int y2 = bbox_1[i].y2 * ori_height;
-        float score = bbox_1[i].score;
+    for(int i=0; i<result.size(); i++){
+        for(int j=0; j<result[i].size();j++){
+            int x1 = result[i][j].x1 * ori_width;
+            int y1 = result[i][j].y1 * ori_height;
+            int x2 = result[i][j].x2 * ori_width;
+            int y2 = result[i][j].y2 * ori_height;
+            float score = result[i][j].score;
+            std::string c_name = string(imagenet_classes[i]) + " : " + to_string(score);
 
-        cv::Point p1(x1, y1);
-        cv::Point p2(x2, y2);
-        cv::Scalar color(255,0,0);
-        cv::rectangle(mat_image_src,p1,p2,color,5);
+            cv::Point p1(x1, y1);
+            cv::Point p2(x2, y2);
+            cv::Scalar color(255, 0, 0);
+            cv::rectangle(mat_image_src, p1, p2, color, 1);
+            cv::Point text_p(x1+10,y1+10);
+            cv::putText(mat_image_src, c_name, text_p, cv::FONT_HERSHEY_COMPLEX, 0.5, color, 1);
+        }
     }
-    for(int i=0; i<bbox_2.size(); i++){
-        int x1 = bbox_2[i].x1 * ori_width;
-        int y1 = bbox_2[i].y1 * ori_height;
-        int x2 = bbox_2[i].x2 * ori_width;
-        int y2 = bbox_2[i].y2 * ori_height;
-        float score = bbox_2[i].score;
 
-        cv::Point p1(x1, y1);
-        cv::Point p2(x2, y2);
-        cv::Scalar color(0,255,0);
-        cv::rectangle(mat_image_src,p1,p2,color,5);
-    }
 //    cv::imwrite("/sdcard/demo/2.jpg", mat_image_src);
     //第四步：转成java数组->更新
     MatToBitmap(env,mat_image_src,srcBitmap);//mat转成化图片
     alog("done");
     std::ostringstream stringStream;
-    stringStream << avg_fps << " FPS\n";
-
+    stringStream << fps << " ms\n";
 
     return env->NewStringUTF(stringStream.str().c_str());
 }
